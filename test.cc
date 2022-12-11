@@ -1,14 +1,26 @@
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_all.hpp>
+#include <catch2/generators/catch_generators_all.hpp>
 
-#include <cstdint>
+#include <algorithm>
+#include <execution>
+#include <vector>
 
-uint32_t factorial(uint32_t number) {
-  return number <= 1 ? number : factorial(number - 1) * number;
-}
+#include <iostream>
 
-TEST_CASE("Factorials are computed", "[factorial]") {
-  REQUIRE(factorial(1) == 1);
-  REQUIRE(factorial(2) == 2);
-  REQUIRE(factorial(3) == 6);
-  REQUIRE(factorial(10) == 3'628'800);
+using namespace Catch::Generators;
+
+TEST_CASE("std::sort") {
+  const int N = 100000;
+
+  auto v = GENERATE(take(1, chunk(N, random(0, N - 1))));
+
+  BENCHMARK("par") {
+    std::sort(std::execution::par, v.begin(), v.end());
+    return v;
+  };
+
+  BENCHMARK("non-par") {
+    std::sort(v.begin(), v.end());
+    return v;
+  };
 }

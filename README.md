@@ -1,4 +1,4 @@
-# C++20 Multithreading Playground
+# C++20 Playground
 
 ## Reference
 
