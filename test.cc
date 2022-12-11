@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <execution>
 #include <iostream>
+#include <latch>
 #include <stop_token>
 #include <thread>
 #include <vector>
@@ -37,5 +38,24 @@ TEST_CASE("std::jthread") {
   }};
   std::cerr << "main|begin" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::cerr << "main|end" << std::endl;
+}
+
+TEST_CASE("std::latch") {
+  const int THREADS = 2;
+  std::latch done(THREADS);
+  std::cerr << "main|begin" << std::endl;
+  std::vector<std::jthread> threads;
+  for (int i = 0; i < THREADS; ++i) {
+    threads.emplace_back(std::jthread([i, &done]() {
+      std::cerr << "thread" << i << "|begin" << std::endl;
+      std::this_thread::sleep_for(std::chrono::seconds(i + 1));
+      std::cerr << "thread" << i << "|wake" << std::endl;
+      done.count_down();
+      std::cerr << "thread" << i << "|end" << std::endl;
+    }));
+  }
+  std::cerr << "main|wait" << std::endl;
+  done.wait();
   std::cerr << "main|end" << std::endl;
 }
