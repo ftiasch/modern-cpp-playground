@@ -39,7 +39,8 @@ struct Dog {
 
 TEST_CASE("std::variant") {
   SECTION("variant<int, bool>") {
-    std::variant<int, bool> v = 42;
+    using V = std::variant<int, bool>;
+    V v = 42;
     REQUIRE(std::variant_size_v<decltype(v)> == 2);
     REQUIRE(std::get<int>(v) == 42);
     REQUIRE(*std::get_if<int>(&v) == 42);
@@ -48,11 +49,15 @@ TEST_CASE("std::variant") {
     REQUIRE(v.index() == 0);
     REQUIRE(std::holds_alternative<int>(v));
     REQUIRE_FALSE(std::holds_alternative<bool>(v));
+    REQUIRE(v == V{42});
+    REQUIRE_FALSE(v == V{true});
     v = true;
     REQUIRE(std::get<bool>(v));
     REQUIRE(v.index() == 1);
     REQUIRE_FALSE(std::holds_alternative<int>(v));
     REQUIRE(std::holds_alternative<bool>(v));
+    REQUIRE(v == V{true});
+    REQUIRE_FALSE(v == V{1});
   }
 
   SECTION("variant<Cat, Dog>") {
