@@ -2,6 +2,7 @@
 #include <catch2/generators/catch_generators_all.hpp>
 
 #include <any>
+#include <concepts>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -35,6 +36,13 @@ struct Cat {
 
 struct Dog {
   int id;
+};
+
+struct Gadget {};
+
+template <typename T>
+concept has_id = requires(T p) {
+  { p.id } -> std::convertible_to<int>;
 };
 
 TEST_CASE("std::variant") {
@@ -77,5 +85,25 @@ TEST_CASE("std::variant") {
     };
     REQUIRE(tf_id(V{Cat{.id = 233}}) == 233);
     REQUIRE(tf_id(V{Dog{.id = 233}}) == 234);
+  }
+
+  /*
+   * https://blog.nickelp.ro/posts/p2162/, Figure 2
+   */
+  SECTION("variant<Cat, Dog, Gadget>") {
+    using V = std::variant<Cat, Dog, Gadget>;
+    auto get_id = [](V v) -> int {
+      return std::visit(
+          [](auto &&args) -> int {
+            if constexpr (has_id<decltype(args)>) {
+              return args.id;
+            }
+            return -1;
+          },
+          v);
+    };
+    REQUIRE(get_id(V{Cat{.id = 233}}) == 233);
+    REQUIRE(get_id(V{Dog{.id = 233}}) == 233);
+    REQUIRE(get_id(V{Gadget{}}) == -1);
   }
 }
